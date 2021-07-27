@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::{self, BufReader, Read, Write};
 use std::process;
 
-use jsonfmt::*;
+use json_fmt::*;
 
 fn fatal(msg: String) -> ! {
     eprintln!("{}", msg);
