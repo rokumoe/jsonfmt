@@ -1,6 +1,6 @@
 [package]
 name = "json-fmt"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["vizee <vizee@live.cn>"]
 edition = "2018"
 license = "MIT"

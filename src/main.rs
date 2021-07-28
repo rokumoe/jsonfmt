@@ -57,7 +57,7 @@ fn main() {
     } else {
         &mut stdin
     };
-    let mut br = BufReader::with_capacity(256, r);
+    let mut br = BufReader::new(r);
 
     let mut stdout = io::stdout();
     let mut buf = Vec::<u8>::new();

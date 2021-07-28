@@ -15,6 +15,11 @@ fn error_msg(msg: String) -> io::Error {
 
 const BAD_CHAR: u8 = b'\x00';
 
+#[inline(always)]
+fn is_whitespace(c: u8) -> bool {
+    matches!(c, b'\t' | b' ' | b'\n' | b'\r')
+}
+
 fn peek_char(r: &mut BufReader<&mut dyn Read>) -> u8 {
     if let Ok(b) = r.fill_buf() {
         return *b.get(0).unwrap_or(&BAD_CHAR);
@@ -27,7 +32,7 @@ fn skip_whitespace(br: &mut BufReader<&mut dyn Read>) -> Result<()> {
         let buf = br.fill_buf()?;
         let mut i = 0usize;
         while i < buf.len() {
-            if !matches!(buf[i], b'\t' | b' ' | b'\n' | b'\r') {
+            if !is_whitespace(buf[i]) {
                 br.consume(i);
                 return Ok(());
             }
@@ -245,9 +250,15 @@ pub fn format_json_fast(
             new_line = false;
         }
         match c {
-            b'"' => {
+            c if c == b'"' || c.is_ascii_digit() || c == b'-' => {
                 br.consume(i);
-                write_string(w, br)?;
+
+                if c == b'"' {
+                    write_string(w, br)?;
+                } else {
+                    write_number(w, br)?;
+                }
+
                 buf = br.fill_buf()?;
                 i = 0;
                 continue;
@@ -264,7 +275,16 @@ pub fn format_json_fast(
             b':' => {
                 w.write(b": ")?;
             }
-            b'\t' | b' ' | b'\n' | b'\r' => {}
+            c if is_whitespace(c) => {
+                i += 1;
+                while i < buf.len() {
+                    if !is_whitespace(buf[i]) {
+                        break;
+                    }
+                    i += 1;
+                }
+                continue;
+            }
             _ => {
                 w.write(&[c])?;
             }
